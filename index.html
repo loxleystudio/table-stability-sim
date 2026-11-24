@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Table Tip Test</title>
+<title>Table Stability Simulation</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: end-view of the table on the left (sticky on desktop), presets, sliders and readouts on the right; stacks on phones. */
+/* Layout: title and test switcher on top, end-view of the table on the left (sticky on desktop), presets, controls and readouts on the right; stacks on phones. */
 :root{
   --bg:#EDEFED; --surface:#FAFBFA; --ink:#17201D; --muted:#55625D; --line:#CBD2CE; --edge:rgba(0,0,0,.28);
   --accent:#1D6B73; --on-accent:#FFFFFF; --accent-on-wood:#8FE3EA;
@@ -39,9 +39,11 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--font-body)}
 .wrap{max-width:1120px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.eyebrow{margin:0 0 6px;font:500 12px/1.3 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-h1{margin:0 0 8px;font:700 clamp(28px,5vw,40px)/1.1 var(--font-display);text-wrap:balance}
-.lede{margin:0 0 22px;max-width:62ch;color:var(--muted)}
+h1{margin:0 0 16px;font:700 clamp(28px,5vw,40px)/1.1 var(--font-display);text-wrap:balance}
+.seg{display:inline-flex;flex-wrap:wrap;gap:3px;padding:3px;margin-bottom:16px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.seg button{font:600 14px/1.2 var(--font-body);padding:9px 16px;border:0;border-radius:6px;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.lede{margin:0 0 22px;max-width:64ch;color:var(--muted)}
 .grid{display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
 @media (min-width:900px){.grid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start;gap:28px}.stage{position:sticky;top:16px}}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
@@ -68,6 +70,7 @@ svg.view{display:block;width:100%;height:auto;max-width:100%}
 .steel{fill:var(--steel);stroke:var(--edge)}
 .ped{fill:var(--walnut-dk);stroke:var(--edge)}
 .slab{fill:var(--walnut);stroke:var(--edge)}
+.pad{fill:color-mix(in srgb,var(--load) 35%,transparent);stroke:var(--load);stroke-width:1.5}
 .w-arrow{stroke:var(--accent-on-wood);stroke-width:3}
 .w-label{fill:var(--on-wood);font:500 13px var(--font-mono)}
 .l-arrow{stroke:var(--load);stroke-width:3}
@@ -90,14 +93,12 @@ svg.view{display:block;width:100%;height:auto;max-width:100%}
 .ctl{padding-block:12px;border-top:1px solid var(--line)}
 .ctl:first-of-type{border-top:0;padding-top:0}
 .ctl-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.ctl-h label{font-weight:600}
+.ctl-h label,.ctl-h .lbl{font-weight:600}
 output{font:500 14px var(--font-mono);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;height:28px;margin:2px 0 0;accent-color:var(--accent)}
-select{font:400 14px var(--font-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 10px;margin:4px 0 6px;max-width:100%}
 .chk{display:flex;align-items:center;gap:8px;padding-block:4px;font-size:14px}
 .chk input{width:18px;height:18px;accent-color:var(--accent)}
 .hint{margin:0;font-size:13px;color:var(--muted)}
-.is-off{opacity:.45}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .readouts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px;margin:0}
 .readouts div{min-width:0}
@@ -109,9 +110,8 @@ select{font:400 14px var(--font-body);color:var(--ink);background:var(--surface)
 .notes{margin-top:36px;display:grid;gap:24px 36px;grid-template-columns:minmax(0,1fr)}
 @media (min-width:900px){.notes{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .notes h2{margin:0 0 8px;font:600 17px/1.3 var(--font-display)}
-.notes p,.notes li{font-size:14px;color:var(--muted);margin:0 0 8px}
+.notes li{font-size:14px;color:var(--muted);margin:0 0 8px}
 .notes ul{margin:0;padding-left:18px}
-.foot{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.gauge-fill{transition:none}}
 body{margin:0}
 </style>
@@ -121,25 +121,28 @@ body{margin:0}
 
 <div class="wrap">
   <header>
-    <h1>Table Tip Test</h1>
-    <p class="lede">Drag the sliders to see how pedestal width, base weight and load position change the sideways tipping of the 116 × 46 in table. The view is an end-on cross-section.</p>
+    <h1>Table Stability Simulation</h1>
+    <div class="seg" id="seg" role="group" aria-label="Choose the stability test">
+      <button type="button" data-test="en1730" aria-pressed="true">EN 1730</button>
+      <button type="button" data-test="bifma" aria-pressed="false">ANSI/BIFMA X5.5-2021</button>
+    </div>
+    <p class="lede" id="lede"></p>
   </header>
 
   <main class="grid">
-    <section class="card stage" id="stage" data-state="warn" aria-label="Tipping result and end view">
+    <section class="card stage" id="stage" data-state="ok" aria-label="Test result and end view">
       <div class="sf-row">
-        <span class="sf-label">Safety factor</span>
+        <span class="sf-label">Holding ÷ tipping</span>
         <span class="sf"><span id="sf">1.0</span><small>×</small></span>
-        <span class="pill" id="pill">Marginal</span>
+        <span class="pill" id="pill">Passes</span>
       </div>
       <p class="vtext" id="vtext"></p>
       <div class="gauge" aria-hidden="true">
         <div class="gauge-fill" id="gfill"></div>
         <div class="tick" style="left:33.333%"><span>1</span></div>
-        <div class="tick" style="left:50%"><span>1.5</span></div>
         <div class="tick" style="left:66.667%"><span>2</span></div>
       </div>
-      <svg class="view" id="view" viewBox="0 0 520 350" role="img" aria-label="End view of the table. A person presses down on the long edge of the top while the pedestal weight holds the table down.">
+      <svg class="view" id="view" viewBox="0 0 520 350" role="img" aria-label="End view of the table with the test load or loads on the top near the long edge. The weight of the table holds it down.">
         <defs>
           <marker id="ah-w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto"><path class="mk-w" d="M0,0 L10,5 L0,10 z"/></marker>
           <marker id="ah-l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto"><path class="mk-l" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -157,8 +160,6 @@ body{margin:0}
           <button type="button" class="preset" data-bw="14" data-pl="1" aria-pressed="false">14 in + steel plate</button>
           <button type="button" class="preset" data-bw="16" data-pl="0" aria-pressed="false">16 in</button>
           <button type="button" class="preset" data-bw="16" data-pl="1" aria-pressed="false">16 in + steel plate</button>
-          <button type="button" class="preset" data-bw="18" data-pl="0" aria-pressed="false">18 in</button>
-          <button type="button" class="preset" data-bw="18" data-pl="1" aria-pressed="false">18 in + steel plate</button>
         </div>
       </div>
 
@@ -170,23 +171,13 @@ body{margin:0}
           <p class="hint">Across the table, which is the weak direction.</p>
         </div>
         <div class="ctl">
-          <div class="ctl-h"><span style="font-weight:600">Base weight</span><output id="bwt-o">284 lb</output></div>
+          <div class="ctl-h"><span class="lbl">Base weight</span><output id="bwt-o">224 lb</output></div>
           <p class="hint" id="bwt-h"></p>
         </div>
         <div class="ctl">
-          <div class="ctl-h"><span style="font-weight:600">Steel plate</span><output id="pl-o">off</output></div>
+          <div class="ctl-h"><span class="lbl">Steel plate</span><output id="pl-o">off</output></div>
           <label class="chk" for="pl"><input id="pl" type="checkbox"> Add plate inside the base</label>
           <p class="hint" id="pl-h"></p>
-        </div>
-        <div class="ctl">
-          <div class="ctl-h"><label for="ld">Load on the top</label><output id="ld-o" for="ld">100 lb</output></div>
-          <input id="ld" type="range" min="50" max="300" step="10" value="100">
-          <p class="hint">Someone leaning on the long edge. Try 200 lb for someone sitting on it.</p>
-        </div>
-        <div class="ctl">
-          <div class="ctl-h"><label for="lp">Distance from table centre</label><output id="lp-o" for="lp">21 in</output></div>
-          <input id="lp" type="range" min="10" max="23" step="1" value="21">
-          <p class="hint">21 in is about 50 mm in from the edge. 23 in is the very edge of the top.</p>
         </div>
       </div>
 
@@ -194,11 +185,11 @@ body{margin:0}
         <h2 class="sec-h">Numbers</h2>
         <dl class="readouts">
           <div><dt>Total table weight</dt><dd id="r-total">—<small id="r-total-sub"></small></dd></div>
-          <div><dt>Footprint width</dt><dd id="r-foot">—</dd></div>
+          <div><dt id="r-force-l">Test force</dt><dd id="r-force">—<small id="r-force-sub"></small></dd></div>
           <div><dt>Weight holds down with</dt><dd id="r-res">—</dd></div>
-          <div><dt>Load tips over with</dt><dd id="r-over">—</dd></div>
-          <div><dt>Tips sideways at</dt><dd id="r-tip">—<small>at the chosen spot</small></dd></div>
-          <div><dt>Tips lengthwise at</dt><dd id="r-end">—<small>at the end of the top</small></dd></div>
+          <div><dt>Test loads tip over with</dt><dd id="r-over">—</dd></div>
+          <div><dt id="r-tip-l">Force that tips it</dt><dd id="r-tip">—<small id="r-tip-sub"></small></dd></div>
+          <div><dt>Lengthwise check</dt><dd id="r-len">—<small id="r-len-sub"></small></dd></div>
         </dl>
       </div>
     </section>
@@ -206,20 +197,12 @@ body{margin:0}
 
   <section class="notes">
     <div>
-      <h2>How to read it</h2>
-      <p>The teal arrow is the table's weight. It holds the table down with a lever arm equal to half the footprint width.</p>
-      <p>The violet arrow is the person pressing on the edge. Its lever arm runs from the edge of the base to where they press.</p>
-      <p>The safety factor is the holding moment divided by the tipping moment. Above 1 the table stays put. A factor of 1.5 to 2 leaves room for a bumped load, a soft rug and an uneven floor.</p>
+      <h2>The test as set up</h2>
+      <ul id="n-setup"></ul>
     </div>
     <div>
       <h2>What this uses</h2>
-      <ul>
-        <li>Walnut top, 116 × 46 × 1.5 in, about 175 lb.</li>
-        <li>Pedestal base 73 in long, 28.5 in tall, weight set by the slider.</li>
-        <li>Ultralight MDF base at 32 lb/ft³. Volume from SketchUp: 6.99 ft³ at 14 in wide, 8.87 ft³ at 16 in and 9.19 ft³ at 18 in, with straight lines between and beyond those widths. The optional steel plate is 1/2 in thick, 48 in long and 2 in narrower than the base, flat on the floor inside it. Its weight is steel (0.284 lb/in³) minus the MDF it replaces (32 lb/ft³).</li>
-        <li>Load pressed at mid-length on the long edge, the weakest spot.</li>
-        <li>Rigid, level floor. A soft rug lowers the real margin.</li>
-      </ul>
+      <ul id="n-uses"></ul>
     </div>
   </section>
 </div>
@@ -227,14 +210,78 @@ body{margin:0}
 <script>
 (function(){
   var S=8, CX=260, FY=292, TOP_W=175, BASE_L=73, TOP_HALF=23, TOP_END=58, TIP_DEG=10;
+  var N_PER_LB=4.4482216;
+  var EN_V=400/N_PER_LB, EN_PAD=100/25.4, EN_EDGE=50/25.4, EN_X=TOP_HALF-EN_EDGE;
+
+  var PASS_RULE='The test has no safety factor, so the page shows the margin as the holding moment divided by the tipping moment. Above 1 passes, and under 1.25 is shown as a thin margin.';
+  var TESTS={
+    en1730:{
+      lede:'Checks the 116 × 46 in table against the stability test in EN 1730:2012, clause 7.2, using the vertical force that EN 12521 sets for domestic tables. The table passes if it does not overturn. The view is an end-on cross-section.',
+      loads:[{lb:EN_V,x:EN_X,pad:EN_PAD,label:'400 N ('+Math.round(EN_V)+' lb)',aTop:30,anchor:'end',dx:4,dy:-34}],
+      endLoads:[{lb:EN_V,x:TOP_END-EN_EDGE}],
+      armLabel:'Test force lever arm',
+      onText:'With the test force on, ',
+      verb:'overturn',
+      forceLabel:'Test force', forceVal:'400 N', forceSub:'vertical, 50 mm from the edge',
+      tipLabel:'Force at that spot that tips it',
+      tipSub:function(lb){return Math.round(lb*N_PER_LB).toLocaleString('en-US')+' N'},
+      setup:[
+        'A vertical force through a rigid 100 mm pad, applied 50 mm from the outer edge of the top, on the side most likely to overturn the table and as far from the supports as possible. This page puts the centre of the pad 50 mm from the edge, which is the harder reading.',
+        'The force depends on the longest side of the top. For domestic tables EN 12521 gives 200 N under 800 mm and 400 N over 1600 mm, with a straight line between. This top is 2,946 mm long, so the force is 400 N, about 90 lb.',
+        'The table is under 950 mm high, so the full force applies. Taller tables use half.',
+        'The table passes if it does not overturn. '+PASS_RULE,
+        'The lengthwise check puts the same force 50 mm in from the short edge, at the end of the top.'
+      ],
+      usesExtra:[
+        'The force acts at the centre of the pad. The floor is rigid and level, as on a test floor. A soft rug lowers the real margin.',
+        'These are the domestic table values. Tables for non-domestic use are tested to a different standard.'
+      ]
+    },
+    bifma:{
+      lede:'Checks the 116 × 46 in table against the stability test loads in ANSI/BIFMA X5.5-2021, section 4, for tables under 38 in high. The table passes if it does not tip. The view is an end-on cross-section.',
+      loads:[
+        {lb:125,x:16,pad:12,label:'125 lb',aTop:42,anchor:'end',dx:-6,dy:-38},
+        {lb:75,x:19,pad:8,label:'75 lb',aTop:30,anchor:'start',dx:6,dy:-26}
+      ],
+      endLoads:[{lb:125,x:TOP_END-7},{lb:75,x:TOP_END-4}],
+      armLabel:'125 lb load lever arm',
+      onText:'With both test loads on, ',
+      verb:'tip',
+      forceLabel:'Test loads', forceVal:'125 + 75 lb', forceSub:'12 in disk + 8 in pad, vertical',
+      tipLabel:'12 in disk load that tips it',
+      tipSub:function(){return 'with the 75 lb load also on'},
+      setup:[
+        'A 125 lb load on a 12 in disk. The disk is centred 7 in from the edge of the top, which is 16 in from the centre line of this 46 in wide top. It is placed at the least stable spot, along the long edge.',
+        'A 75 lb load on an 8 in pad tangent to the edge, so its centre is 4 in from the edge and 19 in from the centre line.',
+        'The table passes if it does not tip. '+PASS_RULE,
+        'The lengthwise check puts the same loads at the end of the top, 7 in and 4 in in from the short edge.'
+      ],
+      usesExtra:[
+        'Each disk load acts at the centre of its disk. The floor is rigid and level, as on the test platform. A soft rug lowers the real margin.'
+      ]
+    }
+  };
+  var USES_COMMON=[
+    'Walnut top, 116 × 46 × 1.5 in, about 175 lb.',
+    'Pedestal base 73 in long, 28.5 in tall. Ultralight MDF at 32 lb/ft³. Volume from SketchUp: 6.99 ft³ at 14 in wide, 8.87 ft³ at 16 in and 9.19 ft³ at 18 in, with straight lines between and beyond those widths.',
+    'The optional steel plate is 1/2 in thick, 48 in long and 2 in narrower than the base, flat on the floor inside it. Its weight is steel (0.284 lb/in³) minus the MDF it replaces (32 lb/ft³).'
+  ];
+
+  var testId='en1730';
+  try{ var h0=(location.hash||'').slice(1); if(TESTS[h0]) testId=h0; }catch(e){}
+
   function $(id){return document.getElementById(id)}
-  var el={bw:$('bw'),pl:$('pl'),ld:$('ld'),lp:$('lp')};
+  var el={bw:$('bw'),pl:$('pl')};
   var grp=$('tbl'), ovl=$('ovl');
-  var angle=0, target=0, raf=0, pivotX=CX, curPivot=CX;
+  var angle=0, target=0, raf=0, pivotX=CX;
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function fmt(n){return Math.round(n).toLocaleString('en-US')}
   function inch(n){return String(Math.round(n*10)/10)}
+  function fillList(id,items){
+    var ul=$(id); ul.textContent='';
+    items.forEach(function(t){var li=document.createElement('li'); li.textContent=t; ul.appendChild(li);});
+  }
 
   function applyAngle(){
     grp.setAttribute('transform','rotate('+angle.toFixed(2)+' '+pivotX+' '+FY+')');
@@ -254,22 +301,40 @@ body{margin:0}
   }
 
   function render(){
-    var bw=+el.bw.value, P=+el.ld.value, L=+el.lp.value;
+    var T=TESTS[testId];
+    var bw=+el.bw.value;
     var vol= bw<=16 ? 6.99+(8.87-6.99)*(bw-14)/2 : (bw<=18 ? 8.87+(9.19-8.87)*(bw-16)/2 : 9.19+0.16*(bw-18));
     var bwt=vol*32;
     var plate=el.pl.checked;
     var pw=bw-2, plL=48, plT=0.5;
     var plateW=plate? pw*plL*plT*(0.284-32/1728) : 0;
-    var f=bw;
     var W=TOP_W+bwt+plateW;
-    var half=f/2;
-    var arm=L-half;
-    var resist=W*half;
-    var over=P*Math.max(arm,0);
-    var tipLoad=arm>0? resist/arm : Infinity;
-    var sf=over>0? resist/over : Infinity;
-    var endTip=W*(BASE_L/2)/(TOP_END-BASE_L/2);
-    var tips=sf<1;
+    var half=bw/2;
+
+    // sideways test: pivot on the long edge of the base
+    var over=0, others=0;
+    T.loads.forEach(function(L,i){var a=L.x-half; over+=L.lb*a; if(i>0) others+=L.lb*a;});
+    var arm1=T.loads[0].x-half;
+    var hold=W*half;
+    var ratio=hold/over;
+    var tipLb=(hold-others)/arm1;
+    var tips=ratio<1;
+
+    // lengthwise check: same loads at the end of the top, pivot on the short end of the base
+    var halfL=BASE_L/2, overL=0;
+    T.endLoads.forEach(function(L){overL+=L.lb*(L.x-halfL);});
+    var ratioL=W*halfL/overL;
+
+    // text for the chosen test
+    $('lede').textContent=T.lede;
+    $('r-force-l').textContent=T.forceLabel;
+    $('r-force').firstChild.nodeValue=T.forceVal;
+    $('r-force-sub').textContent=T.forceSub;
+    $('r-tip-l').textContent=T.tipLabel;
+    fillList('n-setup',T.setup);
+    fillList('n-uses',USES_COMMON.concat(T.usesExtra));
+    var tb=document.querySelectorAll('#seg button');
+    for(var k=0;k<tb.length;k++) tb[k].setAttribute('aria-pressed',tb[k].dataset.test===testId?'true':'false');
 
     // outputs
     $('bw-o').textContent=bw+' in';
@@ -277,35 +342,34 @@ body{margin:0}
     $('bwt-h').textContent='Ultralight MDF, '+vol.toFixed(2)+' ft³ at 32 lb/ft³. SketchUp gives 6.99 ft³ at 14 in, 8.87 ft³ at 16 in and 9.19 ft³ at 18 in. Other widths are drawn between and beyond those points.';
     $('pl-o').textContent=plate? fmt(plateW)+' lb' : 'off';
     $('pl-h').textContent='Steel, 1/2 in thick, 48 in long, '+pw+' in wide (2 in less than the base), flush with the bottom of the base. Counted as steel minus the MDF it replaces. Two 1/4 in plates give the same mass.';
-    $('ld-o').textContent=P+' lb';
-    $('lp-o').textContent=L+' in';
 
     // geometry
     pivotX=CX+half*S;
-    var loadX=CX+L*S;
+    var plateH=plate? plT*S : 0;
     var pedH=28.5*S, pedW=bw*S;
     var pedY=FY-pedH, topY=pedY-12;
+    var xA=CX+T.loads[0].x*S, edgeL=CX-TOP_HALF*S;
 
     var g='';
     g+='<rect class="ped" x="'+(CX-pedW/2)+'" y="'+pedY+'" width="'+pedW+'" height="'+pedH+'"/>';
-    if(plate) g+='<rect class="steel" x="'+(CX-pw*S/2)+'" y="'+(FY-plT*S)+'" width="'+(pw*S)+'" height="'+(plT*S)+'"/>';
-    g+='<rect class="slab" x="'+(CX-TOP_HALF*S)+'" y="'+topY+'" width="'+(TOP_HALF*2*S)+'" height="12" rx="3"/>';
+    if(plate) g+='<rect class="steel" x="'+(CX-pw*S/2)+'" y="'+(FY-plateH)+'" width="'+(pw*S)+'" height="'+plateH+'"/>';
+    g+='<rect class="slab" x="'+edgeL+'" y="'+topY+'" width="'+(TOP_HALF*2*S)+'" height="12" rx="3"/>';
     g+='<text class="w-label" x="'+CX+'" y="'+(pedY+32)+'" text-anchor="middle">'+fmt(W)+' lb</text>';
-    g+='<line class="w-arrow" x1="'+CX+'" y1="'+(pedY+44)+'" x2="'+CX+'" y2="'+(FY-14)+'" marker-end="url(#ah-w)"/>';
-    g+='<line class="l-arrow" x1="'+loadX+'" y1="'+(topY-46)+'" x2="'+loadX+'" y2="'+(topY-3)+'" marker-end="url(#ah-l)"/>';
-    g+='<text class="l-label" x="'+loadX+'" y="'+(topY-54)+'" text-anchor="middle">'+P+' lb</text>';
+    g+='<line class="w-arrow" x1="'+CX+'" y1="'+(pedY+44)+'" x2="'+CX+'" y2="'+(FY-plateH-12)+'" marker-end="url(#ah-w)"/>';
+    T.loads.forEach(function(L){
+      var xc=CX+L.x*S;
+      g+='<rect class="pad" x="'+(xc-L.pad*S/2)+'" y="'+(topY-4)+'" width="'+(L.pad*S)+'" height="4"/>';
+      g+='<line class="l-arrow" x1="'+xc+'" y1="'+(topY-L.aTop)+'" x2="'+xc+'" y2="'+(topY-6)+'" marker-end="url(#ah-l)"/>';
+      g+='<text class="l-label" x="'+(xc+L.dx)+'" y="'+(topY+L.dy)+'" text-anchor="'+L.anchor+'">'+L.label+'</text>';
+    });
     grp.innerHTML=g;
 
     var y1=FY+28, y2=FY+50, o='';
     o+='<rect class="floor" x="0" y="'+FY+'" width="520" height="6"/>';
     o+='<g class="dim-w"><line x1="'+CX+'" y1="'+y1+'" x2="'+pivotX+'" y2="'+y1+'"/><line x1="'+CX+'" y1="'+(y1-5)+'" x2="'+CX+'" y2="'+(y1+5)+'"/><line x1="'+pivotX+'" y1="'+(y1-5)+'" x2="'+pivotX+'" y2="'+(y1+5)+'"/></g>';
     o+='<text class="dim-w-t" x="16" y="'+(y1+4)+'">Weight lever arm  '+inch(half)+' in</text>';
-    if(arm>0){
-      o+='<g class="dim-l"><line x1="'+pivotX+'" y1="'+y2+'" x2="'+loadX+'" y2="'+y2+'"/><line x1="'+pivotX+'" y1="'+(y2-5)+'" x2="'+pivotX+'" y2="'+(y2+5)+'"/><line x1="'+loadX+'" y1="'+(y2-5)+'" x2="'+loadX+'" y2="'+(y2+5)+'"/></g>';
-      o+='<text class="dim-l-t" x="16" y="'+(y2+4)+'">Load lever arm  '+inch(arm)+' in</text>';
-    } else {
-      o+='<text class="dim-l-t" x="16" y="'+(y2+4)+'">Load sits over the base</text>';
-    }
+    o+='<g class="dim-l"><line x1="'+pivotX+'" y1="'+y2+'" x2="'+xA+'" y2="'+y2+'"/><line x1="'+pivotX+'" y1="'+(y2-5)+'" x2="'+pivotX+'" y2="'+(y2+5)+'"/><line x1="'+xA+'" y1="'+(y2-5)+'" x2="'+xA+'" y2="'+(y2+5)+'"/></g>';
+    o+='<text class="dim-l-t" x="16" y="'+(y2+4)+'">'+T.armLabel+'  '+inch(arm1)+' in</text>';
     o+='<circle class="pivot" cx="'+pivotX+'" cy="'+FY+'" r="4.5"/>';
     o+='<text class="pivot-t" x="'+(pivotX+9)+'" y="'+(FY-7)+'">pivot</text>';
     ovl.innerHTML=o;
@@ -315,25 +379,25 @@ body{margin:0}
     if(newTarget!==target){ go(newTarget); } else { applyAngle(); }
 
     // verdict
-    var state= tips? 'bad' : (sf<1.5? 'warn':'ok');
-    var label= tips? 'Tips over' : (sf<1.5? 'Marginal' : (sf<2? 'Acceptable' : 'Stable'));
+    var state= tips? 'bad' : (ratio<1.25? 'warn':'ok');
+    var label= tips? 'Fails' : (ratio<1.25? 'Passes, thin margin' : 'Passes');
     $('stage').setAttribute('data-state',state);
     $('pill').textContent=label;
-    $('sf').textContent= sf===Infinity? '∞' : (sf>20? '20+' : sf.toFixed(1));
-    var pct=sf===Infinity? 100 : Math.min(sf,3)/3*100;
-    $('gfill').style.width=pct+'%';
-    $('vtext').textContent= arm>0
-      ? 'Pressing '+P+' lb at '+L+' in from the centre line. It takes '+fmt(tipLoad)+' lb there to tip the table.'
-      : 'The load sits over the base, so the table cannot tip from that spot.';
+    $('sf').textContent= ratio>20? '20+' : ratio.toFixed(2);
+    $('gfill').style.width=(Math.min(ratio,3)/3*100)+'%';
+    $('vtext').textContent= tips
+      ? T.onText+fmt(over)+' in-lb is trying to tip the table and the weight of the table holds with only '+fmt(hold)+' in-lb.'
+      : T.onText+fmt(over)+' in-lb is trying to tip the table. The weight of the table holds with '+fmt(hold)+' in-lb, so it does not '+T.verb+'.';
 
     // numbers
     $('r-total').firstChild.nodeValue=fmt(W)+' lb';
     $('r-total-sub').textContent='top 175 + base '+fmt(bwt)+(plate? ' + plate '+fmt(plateW):'');
-    $('r-foot').textContent=inch(f)+' in';
-    $('r-res').textContent=fmt(resist)+' in-lb';
+    $('r-res').textContent=fmt(hold)+' in-lb';
     $('r-over').textContent=fmt(over)+' in-lb';
-    $('r-tip').firstChild.nodeValue= tipLoad===Infinity? 'no tip' : fmt(tipLoad)+' lb';
-    $('r-end').firstChild.nodeValue=fmt(endTip)+' lb';
+    $('r-tip').firstChild.nodeValue=fmt(tipLb)+' lb';
+    $('r-tip-sub').textContent=T.tipSub(tipLb);
+    $('r-len').firstChild.nodeValue=ratioL.toFixed(1)+'×';
+    $('r-len-sub').textContent= ratioL<1? 'Fails' : 'Passes';
 
     // presets
     var btns=document.querySelectorAll('.preset');
@@ -344,14 +408,24 @@ body{margin:0}
     }
   }
 
-  var keys=['bw','pl','ld','lp'];
-  keys.forEach(function(k){el[k].addEventListener('input',render);el[k].addEventListener('change',render)});
+  ['bw','pl'].forEach(function(k){el[k].addEventListener('input',render);el[k].addEventListener('change',render)});
   document.querySelectorAll('.preset').forEach(function(b){
     b.addEventListener('click',function(){
       var d=b.dataset;
       el.bw.value=d.bw; el.pl.checked=d.pl==='1';
       render();
     });
+  });
+  document.querySelectorAll('#seg button').forEach(function(b){
+    b.addEventListener('click',function(){
+      testId=b.dataset.test;
+      try{ if(location.hash!=='#'+testId) location.hash=testId; }catch(e){}
+      render();
+    });
+  });
+  window.addEventListener('hashchange',function(){
+    var h=(location.hash||'').slice(1);
+    if(TESTS[h] && h!==testId){ testId=h; render(); }
   });
   render();
 })();
